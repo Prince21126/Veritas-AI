@@ -17,6 +17,14 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+// URL prefix normalization for serverless platform rewrites
+app.use((req, res, next) => {
+  if (!req.url.startsWith("/api")) {
+    req.url = "/api" + (req.url.startsWith("/") ? "" : "/") + req.url;
+  }
+  next();
+});
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
