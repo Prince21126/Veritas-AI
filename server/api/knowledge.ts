@@ -15,7 +15,6 @@ const chunker = new SemanticChunker();
 const ingestionPipeline = new IngestionPipeline(extractor, chunker, globalVectorStore);
 
 export const collector = new KnowledgeCollector(ingestionPipeline);
-collector.start(3600000); // 1 hour
 
 router.post("/ingest", requireAuth, requireRole(["admin", "partner"]), upload.single("file"), async (req, res) => {
   try {
