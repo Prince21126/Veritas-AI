@@ -1,21 +1,26 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 
 export class GemmaService {
-  private ai: GoogleGenAI;
+  private aiClient: GoogleGenAI | null = null;
 
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  private get ai(): GoogleGenAI {
+    if (!this.aiClient) {
+      const apiKey = process.env.GEMINI_API_KEY || "";
+      this.aiClient = new GoogleGenAI({ apiKey });
+    }
+    return this.aiClient;
   }
 
   async generate(prompt: string, context?: string): Promise<string> {
     const fullPrompt = context ? `CONTEXT:\n${context}\n\nINSTRUCTIONS:\n${prompt}` : prompt;
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     
     let retries = 5;
     let delay = 2000;
     while (retries > 0) {
       try {
         const response = await this.ai.models.generateContent({
-          model: "gemini-3.6-flash",
+          model: modelName,
           contents: fullPrompt,
           config: {
             temperature: 0.2,
@@ -50,12 +55,13 @@ export class GemmaService {
   }
 
   async generateJson(prompt: string, schema: Schema): Promise<any> {
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     let retries = 5;
     let delay = 2000;
     while (retries > 0) {
       try {
         const response = await this.ai.models.generateContent({
-          model: "gemini-3.6-flash",
+          model: modelName,
           contents: prompt,
           config: {
             temperature: 0.1,
@@ -98,6 +104,7 @@ export class GemmaService {
 }
 
 export const gemma = new GemmaService();
+
 
 
 
