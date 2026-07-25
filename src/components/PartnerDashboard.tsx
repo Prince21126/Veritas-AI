@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, UploadCloud, FileText, CheckCircle2 } from 'lucide-react';
-import { authFetch } from '../utils/api';
+import { authFetch, parseJsonResponse } from '../utils/api';
 import { IngestionForm } from './IngestionForm';
 
 export const PartnerDashboard = () => {
@@ -17,8 +17,8 @@ export const PartnerDashboard = () => {
         authFetch('/api/v1/partner/dashboard'),
         authFetch('/api/v1/partner/documents')
       ]);
-      setStats(await statsRes.json());
-      setDocuments(await docsRes.json());
+      setStats(await parseJsonResponse(statsRes));
+      setDocuments(await parseJsonResponse(docsRes));
     } catch (e) {
       console.error(e);
     }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UploadCloud, CheckCircle2 } from 'lucide-react';
-import { authFetch } from '../utils/api';
+import { authFetch, parseJsonResponse } from '../utils/api';
 
 export const IngestionForm = () => {
   const [ingestFile, setIngestFile] = useState<File | null>(null);
@@ -16,12 +16,11 @@ export const IngestionForm = () => {
     formData.append('file', ingestFile);
     try {
       const res = await authFetch('/api/v1/knowledge/ingest', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Erreur lors de l'ingestion");
-      setIngestStatus({ type: 'success', msg: data.message });
+      const data = await parseJsonResponse(res);
+      setIngestStatus({ type: 'success', msg: data.message || "Document indexé avec succès !" });
       setIngestFile(null);
     } catch (err: any) {
-      setIngestStatus({ type: 'error', msg: err.message });
+      setIngestStatus({ type: 'error', msg: err.message || "Erreur lors de l'ingestion" });
     } finally {
       setIngestLoading(false);
     }

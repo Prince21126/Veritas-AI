@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import "express-async-errors";
 import veritasRouter from "./server/api/veritas";
@@ -13,7 +14,17 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  // Enable CORS for cross-origin requests & OPTIONS preflights
+  app.use(cors({ origin: true, credentials: true }));
+
+  // Middleware for parsing requests
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+  // Health check
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
 
   // API Routes
   app.use("/api/v1/veritas", veritasRouter);
@@ -23,12 +34,12 @@ async function startServer() {
   app.use("/api/v1/partner", partnerRouter);
   app.use("/api/v1/sources", sourcesRouter);
 
-  // Health check
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+  // Catch-all 404 for unhandled API requests (always return JSON, never HTML)
+  app.all("/api/*", (req, res) => {
+    res.status(404).json({ detail: `Route API introuvable: ${req.method} ${req.originalUrl}` });
   });
 
-  // Vite middleware for development
+  // Vite middleware for development or Static file serving for production
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -43,9 +54,10 @@ async function startServer() {
     });
   }
 
+  // Global Error Handler
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error(err);
-    res.status(500).json({ detail: err.message || "Internal Server Error" });
+    console.error("Server Error:", err);
+    res.status(err.status || 500).json({ detail: err.message || "Internal Server Error" });
   });
 
   app.listen(PORT, "0.0.0.0", () => {

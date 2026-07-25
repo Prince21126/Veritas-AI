@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import { Search, AlertCircle, Scale, CheckCircle2, AlertTriangle, Info, ArrowRight, ShieldCheck, XCircle, FileSearch, ShieldAlert, Shield, Paperclip, FileText, UploadCloud, LogIn, LogOut, Settings, LayoutDashboard, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { parseJsonResponse, authFetch } from './utils/api';
 import { AdminDashboard } from './components/AdminDashboard';
 import { PartnerDashboard } from './components/PartnerDashboard';
 
@@ -27,15 +28,6 @@ const useAuth = () => {
   };
 
   return { user, login, logout };
-};
-
-// --- API Helper ---
-export const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('veritas_token');
-  if (token) {
-    options.headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
-  }
-  return fetch(url, options);
 };
 
 // --- Components ---
@@ -91,20 +83,20 @@ const LoginView = ({ login }: { login: (user: any, token: string) => void }) => 
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     try {
       const res = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail);
+      const data = await parseJsonResponse(res);
       login(data.user, data.token);
       if (data.user.role === 'admin') navigate('/admin');
       else if (data.user.role === 'partner') navigate('/partner');
       else navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Erreur de connexion');
     }
   };
 
@@ -195,15 +187,11 @@ const MainView = () => {
         body: formData
       });
       
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Une erreur est survenue lors de la vérification.');
-      }
-      
+      const data = await parseJsonResponse(res);
       setResultId(data.id);
       pollResult(data.id);
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.message || 'Une erreur est survenue lors de la vérification.');
       setLoading(false);
     }
   };
@@ -211,11 +199,7 @@ const MainView = () => {
   const pollResult = async (id: string) => {
     try {
       const res = await fetch(`/api/v1/veritas/result/${id}`);
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.message || 'Erreur lors de la récupération des résultats.');
-      }
+      const data = await parseJsonResponse(res);
       
       if (data.status === 'processing') {
         setTimeout(() => pollResult(id), 2000);
@@ -224,7 +208,7 @@ const MainView = () => {
         setLoading(false);
       }
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.message || 'Erreur lors de la récupération des résultats.');
       setLoading(false);
     }
   };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Database, Server, Users, Search, RefreshCw, FileText, CheckCircle2, ShieldAlert, Plus, Pencil, Trash2, X, UserPlus, Building, Mail, Shield } from 'lucide-react';
-import { authFetch } from '../utils/api';
+import { authFetch, parseJsonResponse } from '../utils/api';
 import { IngestionForm } from './IngestionForm';
 
 export const AdminDashboard = () => {
@@ -134,11 +134,11 @@ export const AdminDashboard = () => {
         authFetch('/api/v1/admin/partners'),
         authFetch('/api/v1/admin/collector')
       ]);
-      setStats(await statsRes.json());
-      setDocuments(await docsRes.json());
-      setSources(await sourcesRes.json());
-      setPartners(await partnersRes.json());
-      setCollector(await collectorRes.json());
+      setStats(await parseJsonResponse(statsRes));
+      setDocuments(await parseJsonResponse(docsRes));
+      setSources(await parseJsonResponse(sourcesRes));
+      setPartners(await parseJsonResponse(partnersRes));
+      setCollector(await parseJsonResponse(collectorRes));
     } catch (e) {
       console.error(e);
     }
