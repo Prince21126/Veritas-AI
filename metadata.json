@@ -1,0 +1,6 @@
+{
+  "name": "Veritas AI",
+  "description": "An AI-powered verification platform for responsible verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
